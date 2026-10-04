@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SmartScan Pro - Ultimate Edition</title>
+  <title>SmartScan Pro - Fast Edition</title>
   
   <!-- PWA & Web App Meta Etiketleri -->
   <meta name="theme-color" content="#0f172a">
@@ -186,6 +186,7 @@
       min-width: 22%;
     }
 
+    .btn-rescan { background: #eab308; color: #000; display: none; }
     .btn-main { background: #22c55e; color: #000; }
     .btn-link { background: #3b82f6; color: #fff; display: none; }
     .btn-share { background: #8b5cf6; color: #fff; }
@@ -289,7 +290,7 @@
       <input type="checkbox" id="auto-copy" checked> Otomatik Kopyala
     </label>
     <label class="toggle-label">
-      <input type="checkbox" id="batch-mode"> Seri Mod ⚡
+      <input type="checkbox" id="batch-mode" onchange="toggleBatchMode()"> Seri Mod ⚡
     </label>
     
     <div style="display:flex; align-items:center; gap:4px;">
@@ -315,6 +316,7 @@
     <div class="result-code" id="code-text">Kamerayı koda doğrultun...</div>
     
     <div class="actions">
+      <button class="btn btn-rescan" id="btn-rescan" onclick="resumeScanning()">📷 Yeniden Tara</button>
       <button class="btn btn-main" id="btn-search">Google'da Ara</button>
       <button class="btn btn-link" id="btn-open-link" onclick="openUrl()">Siteye Git 🔗</button>
       <button class="btn btn-share" id="btn-share" onclick="shareCode()">Paylaş 📤</button>
@@ -338,6 +340,8 @@
     let lastCode = "";
     let html5QrCode;
     let isTorchOn = false;
+    let isPaused = false;
+    let lastScanTime = 0;
     let history = JSON.parse(localStorage.getItem("scanHistoryPro") || "[]");
 
     function playSound() {
@@ -385,9 +389,17 @@
 
     function onScanSuccess(decodedText) {
       const isBatch = document.getElementById("batch-mode").checked;
-      
-      if (!isBatch && lastCode === decodedText) return;
+      const currentTime = new Date().getTime();
+
+      // Seri Modda 1 saniyelik hızlı bekleme süresi
+      if (isBatch) {
+        if (lastCode === decodedText && (currentTime - lastScanTime) < 1200) return;
+      } else {
+        if (isPaused) return;
+      }
+
       lastCode = decodedText;
+      lastScanTime = currentTime;
 
       playSound();
 
@@ -409,6 +421,29 @@
       }
 
       addHistory(decodedText);
+
+      // Seri modda değilsek kamerayı duraklatıp "Yeniden Tara" butonunu göster
+      if (!isBatch) {
+        isPaused = true;
+        if (html5QrCode) html5QrCode.pause();
+        document.getElementById("btn-rescan").style.display = "inline-block";
+      }
+    }
+
+    function resumeScanning() {
+      if (html5QrCode && isPaused) {
+        html5QrCode.resume();
+        isPaused = false;
+        document.getElementById("btn-rescan").style.display = "none";
+        document.getElementById("code-text").innerText = "Kamerayı koda doğrultun...";
+      }
+    }
+
+    function toggleBatchMode() {
+      const isBatch = document.getElementById("batch-mode").checked;
+      if (isBatch && isPaused) {
+        resumeScanning();
+      }
     }
 
     function openUrl() {
@@ -516,7 +551,7 @@
     function toggleTheme() {
       document.body.classList.toggle("light-mode");
       const btn = document.getElementById("theme-btn");
-      btn.innerText = document.body.classList.contains("light-mode") ? "☀️ Mod" : "🌙 Mod";
+      btn.innerText = document.body.classList.contains("light-mode") ? "☀️️ Mod" : "🌙 Mod";
     }
 
     function toggleTorch() {
@@ -534,7 +569,7 @@
     function initCamera() {
       html5QrCode = new Html5Qrcode("reader");
       const config = {
-        fps: 15,
+        fps: 20,
         qrbox: { width: 250, height: 250 },
         formatsToSupport: [
           Html5QrcodeSupportedFormats.QR_CODE,
