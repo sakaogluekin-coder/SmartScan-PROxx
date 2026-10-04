@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SmartScan Pro - Ultimate Edition</title>
+  
+  <!-- PWA & Web App Meta Etiketleri -->
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SmartScan">
+  
+  <script src="https://unpkg.com/html5-qrcode@2.3.4/html5-qrcode.min.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --text-color: #f8fafc;
+      --subtext-color: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.12);
+      --accent-color: #38bdf8;
+    }
+
+    body.light-mode {
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-color: #0f172a;
+      --subtext-color: #64748b;
+      --border-color: rgba(0, 0, 0, 0.12);
+      --accent-color: #0284c7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 12px;
+      gap: 10px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-color);
+    }
+
+    .title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+
+    .header-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      font-size: 0.75rem;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    select.sound-select {
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 2px 4px;
+      font-size: 0.75rem;
+    }
+
+    .camera-box {
+      position: relative;
+      width: 100%;
+      height: 32vh;
+      background: #000;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    #reader {
+      width: 100%;
+      height: 100%;
+    }
+
+    #reader video {
+      object-fit: cover !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .torch-btn, .gallery-btn {
+      position: absolute;
+      top: 10px;
+      z-index: 20;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+
+    .torch-btn { right: 10px; }
+    .gallery-btn { left: 10px; }
+
+    .result-box {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .result-code {
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: var(--accent-color);
+      word-break: break-all;
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.8rem;
+      text-align: center;
+      min-width: 22%;
+    }
+
+    .btn-main { background: #22c55e; color: #000; }
+    .btn-link { background: #3b82f6; color: #fff; display: none; }
+    .btn-share { background: #8b5cf6; color: #fff; }
+    .btn-sub { background: rgba(255, 255, 255, 0.1); color: var(--text-color); border: 1px solid var(--border-color); }
+    .btn-excel { background: #10b981; color: #fff; }
+
+    .history-box {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid var(--border-color);
+      max-height: 240px;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--subtext-color);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: rgba(0, 0, 0, 0.1);
+      color: var(--text-color);
+      font-size: 0.8rem;
+    }
+
+    .history-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      font-size: 0.8rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 8px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-item.fav {
+      border-left: 3px solid #f59e0b;
+    }
+
+    .item-info {
+      display: flex;
+      flex-direction: column;
+      max-width: 70%;
+    }
+
+    .item-code-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .item-date {
+      font-size: 0.65rem;
+      color: var(--subtext-color);
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn-fav {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title">SmartScan Pro</div>
+    <div class="header-btns">
+      <button class="btn-icon" onclick="toggleTheme()" id="theme-btn">🌙 Mod</button>
+    </div>
+  </header>
+
+  <div class="controls-bar">
+    <label class="toggle-label">
+      <input type="checkbox" id="auto-copy" checked> Otomatik Kopyala
+    </label>
+    <label class="toggle-label">
+      <input type="checkbox" id="batch-mode"> Seri Mod ⚡
+    </label>
+    
+    <div style="display:flex; align-items:center; gap:4px;">
+      <span>Ses:</span>
+      <select id="sound-type" class="sound-select">
+        <option value="beep">Bip 🔔</option>
+        <option value="laser">Lazer ⚡</option>
+        <option value="retro">Retro 🎮</option>
+        <option value="silent">Sessiz 🔇</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="camera-box">
+    <button class="gallery-btn" onclick="document.getElementById('file-input').click()">🖼️ Galeri</button>
+    <button class="torch-btn" onclick="toggleTorch()">🔦 Flaş</button>
+    <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="scanImage(this)">
+    <div id="reader"></div>
+  </div>
+
+  <div class="result-box">
+    <div style="font-size:0.75rem; color:var(--subtext-color);">SON OKUNAN BARKOD / QR:</div>
+    <div class="result-code" id="code-text">Kamerayı koda doğrultun...</div>
+    
+    <div class="actions">
+      <button class="btn btn-main" id="btn-search">Google'da Ara</button>
+      <button class="btn btn-link" id="btn-open-link" onclick="openUrl()">Siteye Git 🔗</button>
+      <button class="btn btn-share" id="btn-share" onclick="shareCode()">Paylaş 📤</button>
+      <button class="btn btn-sub" id="btn-copy">Kopyala</button>
+    </div>
+  </div>
+
+  <div class="history-box">
+    <div class="history-header">
+      <span>GEÇMİŞ (<span id="scan-count">0</span>)</span>
+      <div>
+        <button class="btn btn-excel" style="padding: 2px 8px; font-size:0.7rem; margin-right:4px;" onclick="exportToCSV()">📊 Excel İndir</button>
+        <span style="cursor:pointer; color:#ef4444;" onclick="clearHistory()">Temizle</span>
+      </div>
+    </div>
+    <input type="text" class="search-input" id="search-box" placeholder="Geçmişte ara..." oninput="renderHistory()">
+    <ul class="history-list" id="history-list"></ul>
+  </div>
+
+  <script>
+    let lastCode = "";
+    let html5QrCode;
+    let isTorchOn = false;
+    let history = JSON.parse(localStorage.getItem("scanHistoryPro") || "[]");
+
+    function playSound() {
+      const soundType = document.getElementById("sound-type").value;
+      if (soundType === "silent") return;
+
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        if (soundType === "beep") {
+          osc.type = "sine";
+          osc.frequency.value = 1000;
+          gain.gain.value = 0.1;
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.12);
+        } else if (soundType === "laser") {
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.15);
+          gain.gain.value = 0.1;
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.15);
+        } else if (soundType === "retro") {
+          osc.type = "square";
+          osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.08);
+          gain.gain.value = 0.08;
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.16);
+        }
+      } catch (e) {}
+    }
+
+    function isUrl(str) {
+      return str.startsWith("http://") || str.startsWith("https://");
+    }
+
+    function onScanSuccess(decodedText) {
+      const isBatch = document.getElementById("batch-mode").checked;
+      
+      if (!isBatch && lastCode === decodedText) return;
+      lastCode = decodedText;
+
+      playSound();
+
+      if (navigator.vibrate && document.getElementById("sound-type").value !== "silent") {
+        navigator.vibrate(100);
+      }
+
+      if (document.getElementById("auto-copy").checked) {
+        navigator.clipboard.writeText(decodedText);
+      }
+
+      document.getElementById("code-text").innerText = decodedText;
+      
+      const linkBtn = document.getElementById("btn-open-link");
+      if (isUrl(decodedText)) {
+        linkBtn.style.display = "inline-block";
+      } else {
+        linkBtn.style.display = "none";
+      }
+
+      addHistory(decodedText);
+    }
+
+    function openUrl() {
+      if (lastCode && isUrl(lastCode)) {
+        window.open(lastCode, '_blank');
+      }
+    }
+
+    function shareCode() {
+      if (!lastCode) return;
+      if (navigator.share) {
+        navigator.share({
+          title: 'SmartScan Pro Barkod',
+          text: lastCode,
+          url: isUrl(lastCode) ? lastCode : undefined
+        }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(lastCode);
+        alert("Kod kopyalandı! İstediğin yere yapıştırarak paylaşabilirsin.");
+      }
+    }
+
+    function addHistory(code) {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('tr-TR') + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+      
+      const exists = history.some(item => item.code === code);
+      if (!exists) {
+        history.unshift({ code: code, date: dateStr, fav: false });
+        localStorage.setItem("scanHistoryPro", JSON.stringify(history));
+        renderHistory();
+      }
+    }
+
+    function toggleFav(index) {
+      history[index].fav = !history[index].fav;
+      localStorage.setItem("scanHistoryPro", JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const listEl = document.getElementById("history-list");
+      const filterText = document.getElementById("search-box").value.toLowerCase();
+      document.getElementById("scan-count").innerText = history.length;
+      listEl.innerHTML = "";
+
+      history.forEach((item, index) => {
+        if (item.code.toLowerCase().includes(filterText)) {
+          const li = document.createElement("li");
+          li.className = `history-item ${item.fav ? 'fav' : ''}`;
+          li.innerHTML = `
+            <div class="item-info">
+              <strong class="item-code-text">${item.code}</strong>
+              <span class="item-date">${item.date}</span>
+            </div>
+            <div class="item-actions">
+              <button class="btn-fav" onclick="toggleFav(${index})">${item.fav ? '⭐' : '☆'}</button>
+              <button style="background:none; border:none; color:#22c55e; cursor:pointer;" onclick="searchCode('${item.code}')">Ara 🔍</button>
+            </div>
+          `;
+          listEl.appendChild(li);
+        }
+      });
+    }
+
+    function scanImage(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        html5QrCode.scanFile(file, true)
+          .then(decodedText => {
+            onScanSuccess(decodedText);
+          })
+          .catch(err => {
+            alert("Resimde okunabilir barkod veya QR kod bulunamadı.");
+          });
+      }
+    }
+
+    function clearHistory() {
+      history = [];
+      localStorage.removeItem("scanHistoryPro");
+      renderHistory();
+    }
+
+    function exportToCSV() {
+      if (history.length === 0) {
+        alert("İndirilecek tarama geçmişi yok.");
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,Barkod_QR,Tarih,Favori\n";
+      history.forEach(item => {
+        csvContent += `"${item.code}","${item.date}","${item.fav ? 'Evet' : 'Hayır'}"\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `smartscan_export_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light-mode");
+      const btn = document.getElementById("theme-btn");
+      btn.innerText = document.body.classList.contains("light-mode") ? "☀️ Mod" : "🌙 Mod";
+    }
+
+    function toggleTorch() {
+      if (html5QrCode) {
+        isTorchOn = !isTorchOn;
+        html5QrCode.applyVideoConstraints({
+          advanced: [{ torch: isTorchOn }]
+        }).catch(err => {
+          alert("Flaş desteklenmiyor veya kamera aktif değil.");
+          isTorchOn = false;
+        });
+      }
+    }
+
+    function initCamera() {
+      html5QrCode = new Html5Qrcode("reader");
+      const config = {
+        fps: 15,
+        qrbox: { width: 250, height: 250 },
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.DATA_MATRIX
+        ]
+      };
+
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length > 0) {
+          let selectedCameraId = devices[0].id;
+          for (let dev of devices) {
+            if (dev.label.toLowerCase().includes('back') || dev.label.toLowerCase().includes('environment') || dev.label.toLowerCase().includes('arka')) {
+              selectedCameraId = dev.id;
+              break;
+            }
+          }
+          html5QrCode.start(selectedCameraId, config, onScanSuccess)
+            .catch(err => { document.getElementById("code-text").innerText = "Kamera açılamadı."; });
+        }
+      }).catch(err => { document.getElementById("code-text").innerText = "Kamera izni veriniz."; });
+    }
+
+    function searchCode(code) {
+      window.open(`https://www.google.com/search?q=${encodeURIComponent(code)}`, '_blank');
+    }
+
+    document.getElementById("btn-search").onclick = () => { if (lastCode) searchCode(lastCode); };
+    document.getElementById("btn-copy").onclick = () => {
+      if (lastCode) {
+        navigator.clipboard.writeText(lastCode);
+        alert("Kopyalandı!");
+      }
+    };
+
+    window.onload = () => {
+      initCamera();
+      renderHistory();
+    };
+  </script>
+</body>
+</html>
